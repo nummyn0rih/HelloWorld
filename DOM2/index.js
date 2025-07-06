@@ -92,42 +92,59 @@ function updateTasks() {
 
 const form = document.querySelector('.create-task-block');
 
+const removeErrorMessage = () => {
+    const error = document.querySelector('.error-message-block');
+    if (error) {
+        error.remove();
+    }
+};
+
+const addErrorMessage = (message) => {
+    const error = document.querySelector('.error-message-block');
+    if (error && error.textContent === message) {
+        return;
+    } else if (error) {
+        removeErrorMessage();
+    }
+    const errorMessage = createNewElement('span', 'error-message-block');
+    errorMessage.textContent = message;
+    form.append(errorMessage);
+};
+
+const addNewTask = (text) => {
+    const newTask = {
+        id: Date.now(),
+        completed: false,
+        text,
+    };
+    tasks.push(newTask);
+    updateTasks();
+};
+
 form.addEventListener('submit', (event) => {
     event.preventDefault();
 
     const { target } = event;
     const textTask = target.elements.taskName.value.trim();
+    const isRepeated = tasks.some(el => el.text === textTask);
+    let isError = false;
+    let textErrorMessage = '';
 
     if (!textTask) {
-        const errorMessage = createNewElement('span', 'error-message-block');
-        errorMessage.textContent = 'Название задачи не должно быть пустым.';
-        form.append(errorMessage);
-
-        return;
+        isError = true;
+        textErrorMessage = 'Название задачи не должно быть пустым.';
+    } else if (isRepeated) {
+        isError = true;
+        textErrorMessage = 'Задача с таким названием уже существует.';
     }
 
-    const isRepeat = tasks.some(el => el.text === textTask);
-    if (isRepeat) {
-        const errorMessage = createNewElement('span', 'error-message-block');
-        errorMessage.textContent = 'Задача с таким названием уже существует.';
-        form.append(errorMessage);
-
-        return;
+    if (isError) {
+        addErrorMessage(textErrorMessage);
+    } else {
+        isError = false;
+        removeErrorMessage();
+        addNewTask(target.elements.taskName.value);
     }
-
-    const errorMessage = document.querySelector('.error-message-block');
-    if (errorMessage) {
-        errorMessage.remove();
-    }
-
-    const newTask = {
-        id: Date.now(),
-        completed: false,
-        text: target.elements.taskName.value,
-    };
-    tasks.push(newTask);
-
-    updateTasks();
 });
 
 tasksList.addEventListener('click', ({ target }) => {
